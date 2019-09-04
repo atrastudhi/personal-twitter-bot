@@ -3,3 +3,4 @@ node_modules
 user.json
 db.json
 package-lock.json
+story.json

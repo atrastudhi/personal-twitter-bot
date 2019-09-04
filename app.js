@@ -101,7 +101,7 @@ let story = async () => {
 
       let db = await fetch('story.json');
     
-      let username = ['jkt48rachel', 'jkt48.vivi', 'jkt48.jessi', 'jkt48.chika', 'jkt48.febi', 'jkt48.ratu']
+      let username = ['jkt48.vivi', 'jkt48.vivi', 'jkt48.jessi', 'jkt48.chika', 'jkt48.febi', 'jkt48.ratu']
     
       for (let i = 0; i < username.length; i++) {
         let x = await ig.getStory(username[i])
@@ -229,14 +229,14 @@ let fetch = (file='db.json') => {
 
 setInterval(() => {
   story();
-}, 5000)
+}, 60000)
 
-setInterval(() => {
-  main();
-}, 10000)
+// setInterval(() => {
+//   main();
+// }, 10000)
 
-setInterval(async () => {
-  console.log('================== start weekly login session =======================')
-  await ig.login(process.env.USERNAME, process.env.PASS);
-  console.log('================== end weekly login session =======================')
-}, 1000*60*60*24*7)
+// setInterval(async () => {
+//   console.log('================== start weekly login session =======================')
+//   await ig.login(process.env.USERNAME, process.env.PASS);
+//   console.log('================== end weekly login session =======================')
+// }, 1000*60*60*24*7)
