@@ -1,3 +1,5 @@
 node_modules
 .env
 user.json
+db.json
+package-lock.json

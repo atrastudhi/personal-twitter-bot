@@ -89,6 +89,57 @@ let main = async () => {
   }
 }
 
+let kue_check = false
+
+let story = async () => {
+  try {
+    if (!kue_check) {
+      kue_check = true;
+      console.log('================================== start story ==================================')
+      let session = await fetch('user.json');
+      ig = new Nistagram.default(session);
+
+      let db = await fetch('story.json');
+    
+      let username = ['jkt48rachel', 'jkt48.vivi', 'jkt48.jessi', 'jkt48.chika', 'jkt48.febi', 'jkt48.ratu']
+    
+      for (let i = 0; i < username.length; i++) {
+        let x = await ig.getStory(username[i])
+    
+        if (x) {
+          for (let j = 0; j < x.length; j++) {
+            if (!db.list.includes(x[j].reelMediaId)) {
+              let { data } = await axios.get(x[j].media, {
+                responseType: 'arraybuffer'
+              })
+      
+              let path = await tempSave(data, x[j].media);
+      
+              let media_id_str = await chunkedMedia(path);
+              let tweet = `[${x[j].reelMediaId}] ${username[i]} instagram story:`;
+      
+              await twitingImage(tweet, media_id_str);
+              console.log(`tweet send: ${tweet}`);
+      
+              let unlink = await deleteTemp(path);
+              console.log(unlink);
+
+              db.list.push(x[j].reelMediaId);
+            }
+          }
+        }
+      }
+
+      await save(db, 'story.json');
+      console.log('saved story.json')
+      console.log('================================== end story ==================================')
+      kue_check = false;
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 var T = new Twit({
   consumer_key:         process.env.CONSUMER_KEY,
   consumer_secret:      process.env.CONSUMER_SECRET,
@@ -97,6 +148,38 @@ var T = new Twit({
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
   strictSSL:            true,     // optional - requires SSL certificates to be valid.
 })
+
+let deleteTemp = (path) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(path, (err, data) => {
+      if (err) reject(err)
+      else resolve(`success unlink: ${path}`)
+    })
+  })
+}
+
+let chunkedMedia = (path) => {
+  return new Promise((resolve, reject) => {
+    T.postMediaChunked({ file_path: path }, function (err, data, response) {
+      if (err) reject(err)
+      else {
+        setTimeout(async () => {
+          resolve(data.media_id_string)
+        }, 3000)
+      }
+    })
+  })
+}
+
+let tempSave = (buff, link) => {
+  return new Promise((resolve, reject) => {
+    let type = link.includes('.mp4') ? '.mp4' : '.jpg';
+    fs.writeFile(`./tmp/tmp${type}`, buff,(err, data) => {
+      if (err) reject(err)
+      else resolve(`./tmp/tmp${type}`)
+    })
+  })
+}
 
 let uploadImage = (base64) => {
   return new Promise((resolve, reject) => {
@@ -117,9 +200,9 @@ let twitingImage = (tweet, ids) => {
 }
 
 
-let save = (obj) => {
+let save = (obj, path='db.json') => {
   return new Promise((resolve, reject) => {
-    fs.writeFile('db.json', JSON.stringify(obj), (err, data) => {
+    fs.writeFile(path, JSON.stringify(obj), (err, data) => {
       if (err) reject(err)
       else resolve(data)
     })
@@ -143,6 +226,10 @@ let fetch = (file='db.json') => {
     })
   })
 }
+
+setInterval(() => {
+  story();
+}, 5000)
 
 setInterval(() => {
   main();
