@@ -7,11 +7,14 @@ const dotenv = require('dotenv');
 
 dotenv.config()
 
-const ig = new Nistagram.default();
+let ig = new Nistagram.default();
 
-setInterval(async () => {
+let main = async () => {
   try {
-    let session = await ig.login(process.env.USERNAME, process.env.PASS);
+    console.log('============================= start ==================================')
+    let session = await fetch('user.json');
+    ig = new Nistagram.default(session);
+
     let x = await ig.getTimeLineFeed();
     let obj = await fetch();
     
@@ -80,10 +83,11 @@ setInterval(async () => {
 
     await save(obj);
     console.log('saved to db')
+    console.log('============================= end ==================================')
   } catch (err) {
     console.error(err)
   }
-}, 60000)
+}
 
 var T = new Twit({
   consumer_key:         process.env.CONSUMER_KEY,
@@ -112,14 +116,6 @@ let twitingImage = (tweet, ids) => {
   })
 }
 
-let fetch = () => {
-  return new Promise((resolve, reject) => {
-    fs.readFile('db.json', 'utf8', (err, data) => {
-      if (err) reject(err)
-      else resolve(JSON.parse(data))
-    })
-  })
-}
 
 let save = (obj) => {
   return new Promise((resolve, reject) => {
@@ -138,3 +134,22 @@ let reply = (tweet, ids, id) => {
     })
   })
 }
+
+let fetch = (file='db.json') => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, data) => {
+      if (err) reject(err)
+      else resolve(JSON.parse(data))
+    })
+  })
+}
+
+setInterval(() => {
+  main();
+}, 10000)
+
+setInterval(async () => {
+  console.log('================== start weekly login session =======================')
+  await ig.login(process.env.USERNAME, process.env.PASS);
+  console.log('================== end weekly login session =======================')
+}, 1000*60*60*24*7)
